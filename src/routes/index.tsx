@@ -18,10 +18,20 @@ export const Route = createFileRoute("/")({
   component: LifeBoxHome,
 });
 
+const CAREERS_URL =
+  "https://vendoorvagas.com.br/vagas/?city=Goi%C3%A2nia&q=Lifebox+&cityName=Goi%C3%A2nia";
+
+const WAITLIST_URL =
+  "https://www.vucafood.com.br/lifeboxburger/1/fila-de-espera";
+
+const GOOGLE_MAPS_URL =
+  "https://www.google.com/searchviewer/10?sca_esv=15948584a4935e14&output=search&svid=CAwSKRInCgNwdnESIE9oWXdlREE2TUhnNE5UVTNNek0yWlRsaFl6UXhNRGxoGAo";
+
 const burgers = [
   {
     name: "Picanha Premium",
-    description: "Sabor marcante, carne suculenta e ingredientes selecionados.",
+    description:
+      "Sabor marcante, carne suculenta e ingredientes selecionados.",
     image:
       "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1000&q=85",
   },
@@ -51,7 +61,8 @@ const burgers = [
   },
   {
     name: "Titan Burger",
-    description: "Grande, intenso e feito para quem não passa despercebido.",
+    description:
+      "Grande, intenso e feito para quem não passa despercebido.",
     image:
       "https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=1000&q=85",
   },
@@ -73,50 +84,66 @@ const locations = [
   {
     city: "GOIÂNIA",
     neighborhood: "Setor Oeste",
-    menu: "[WEST_MENU_URL]",
-    ifood: "[WEST_IFOOD_URL]",
+    menu:
+      "https://www.vucafood.com.br/lifeboxburger/1/cardapio-digital",
+    ifood:
+      "https://www.ifood.com.br/delivery/goiania-go/lifebox-burger---setor-oeste-setor-oeste/9a68c339-3db3-447f-b5dc-299723b1dbc2?UTM_Medium=share",
   },
   {
     city: "GOIÂNIA",
     neighborhood: "Jardim Goiás",
-    menu: "[JARDIM_GOIAS_MENU_URL]",
-    ifood: "[JARDIM_GOIAS_IFOOD_URL]",
+    menu:
+      "https://www.vucafood.com.br/lifeboxburger/2/cardapio-digital",
+    ifood:
+      "https://www.ifood.com.br/delivery/goiania-go/lifebox---jd-goias-jardim-goias/4788c1db-008b-4ac2-bdfb-915f428af8b4?UTM_Medium=share",
   },
   {
     city: "BRASÍLIA",
     neighborhood: "Águas Claras",
-    menu: "[AGUAS_CLARAS_MENU_URL]",
-    ifood: "[AGUAS_CLARAS_IFOOD_URL]",
+    menu:
+      "https://www.vucafood.com.br/lifeboxburger/3/cardapio-digital",
+    ifood:
+      "https://www.ifood.com.br/delivery/brasilia-df/lifebox---aguas-claras-norte-aguas-claras/918f9427-cc7a-4e74-9b6c-57fb18d4f5e9",
   },
   {
     city: "BRASÍLIA",
     neighborhood: "Lago Sul",
-    menu: "[LAGO_SUL_MENU_URL]",
-    ifood: "[LAGO_SUL_IFOOD_URL]",
+    menu:
+      "https://www.vucafood.com.br/lifeboxburger/lago-sul/cardapio-digital",
+    ifood:
+      "https://www.ifood.com.br/delivery/brasilia-df/lifebox---lago-sul-asa-sul/376817bb-fe9b-4ad4-b6aa-86eac4e35400",
   },
   {
     city: "BELO HORIZONTE",
     neighborhood: "Savassi",
-    menu: "[SAVASSI_MENU_URL]",
-    ifood: "[SAVASSI_IFOOD_URL]",
+    menu:
+      "https://www.vucafood.com.br/lifeboxburger/Savassi/cardapio-digital",
+    ifood:
+      "https://www.ifood.com.br/delivery/belo-horizonte-mg/lifebox-savassi/82961731-2e86-45e5-a6cb-ceea93018708",
   },
   {
     city: "BELO HORIZONTE",
     neighborhood: "Buritis",
-    menu: "[BURITIS_MENU_URL]",
-    ifood: "[BURITIS_IFOOD_URL]",
+    menu:
+      "https://www.vucafood.com.br/lifeboxburger/1924/cardapio-digital",
+    ifood:
+      "https://www.ifood.com.br/delivery/belo-horizonte-mg/lifebox-buritis---bh-estoril/c07bc283-77f6-4b8d-9fcb-c24de5986705",
   },
   {
     city: "SÃO PAULO",
     neighborhood: "Campinas",
-    menu: "[CAMPINAS_MENU_URL]",
-    ifood: "[CAMPINAS_IFOOD_URL]",
+    menu:
+      "https://www.vucafood.com.br/lifeboxburger/campinas-sp/cardapio-digital",
+    ifood:
+      "https://www.ifood.com.br/delivery/campinas-sp/lifebox----campinas-cambui/8ccab3ee-bf11-44c4-b9de-6b544ecc9828",
   },
   {
     city: "SÃO PAULO",
     neighborhood: "Ribeirão Preto",
-    menu: "[RIBEIRAO_PRETO_MENU_URL]",
-    ifood: "[RIBEIRAO_PRETO_IFOOD_URL]",
+    menu:
+      "https://www.vucafood.com.br/lifeboxburger/2384/cardapio-digital",
+    ifood:
+      "https://www.ifood.com.br/delivery/ribeirao-preto-sp/lifebox-burger---ribeirao-preto-alto-da-boa-vista/dc1490de-7459-4f5c-a345-0bea72609fe1?utm_medium=share",
   },
 ];
 
@@ -145,6 +172,7 @@ function LifeBoxHome() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#080808] text-white selection:bg-orange-500 selection:text-white">
+
       {/* HEADER */}
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
@@ -221,6 +249,7 @@ function LifeBoxHome() {
                   {label}
                 </a>
               ))}
+
               <a
                 href="#cardapio"
                 onClick={closeMenu}
@@ -298,7 +327,10 @@ function LifeBoxHome() {
       </section>
 
       {/* EXPERIENCE */}
-      <section id="experiencia" className="relative bg-[#0b0b0b] px-5 py-24 md:px-10 md:py-36">
+      <section
+        id="experiencia"
+        className="relative bg-[#0b0b0b] px-5 py-24 md:px-10 md:py-36"
+      >
         <div className="mx-auto grid max-w-[1500px] gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div>
             <p className="mb-5 text-xs font-bold uppercase tracking-[0.3em] text-orange-500">
@@ -329,12 +361,14 @@ function LifeBoxHome() {
                   Produto
                 </p>
               </div>
+
               <div>
                 <p className="text-3xl font-black">02</p>
                 <p className="mt-2 text-xs uppercase tracking-widest text-white/40">
                   Ambiente
                 </p>
               </div>
+
               <div>
                 <p className="text-3xl font-black">03</p>
                 <p className="mt-2 text-xs uppercase tracking-widest text-white/40">
@@ -354,6 +388,7 @@ function LifeBoxHome() {
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-orange-500">
                 Signature
               </p>
+
               <h2 className="text-5xl font-black uppercase leading-none tracking-[-0.06em] md:text-7xl">
                 SEU PRÓXIMO
                 <br />
@@ -383,6 +418,7 @@ function LifeBoxHome() {
                     loading={index < 3 ? "eager" : "lazy"}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                   />
+
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
 
                   <div className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-xs font-bold backdrop-blur-md">
@@ -393,6 +429,7 @@ function LifeBoxHome() {
                     <h3 className="text-3xl font-black uppercase tracking-tight">
                       {burger.name}
                     </h3>
+
                     <p className="mt-2 max-w-xs text-sm leading-6 text-white/65">
                       {burger.description}
                     </p>
@@ -403,6 +440,7 @@ function LifeBoxHome() {
                   <span className="text-xs font-bold uppercase tracking-widest text-white/40">
                     LIFEBOX
                   </span>
+
                   <a
                     href="#unidades"
                     className="flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-black text-black transition hover:bg-orange-500 hover:text-white"
@@ -503,7 +541,9 @@ function LifeBoxHome() {
                   loading="lazy"
                   className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-105"
                 />
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+
                 <h3 className="absolute bottom-6 left-6 text-2xl font-black uppercase">
                   {item.name}
                 </h3>
@@ -514,12 +554,16 @@ function LifeBoxHome() {
       </section>
 
       {/* LOCATIONS */}
-      <section id="unidades" className="bg-[#101010] px-5 py-24 md:px-10 md:py-32">
+      <section
+        id="unidades"
+        className="bg-[#101010] px-5 py-24 md:px-10 md:py-32"
+      >
         <div className="mx-auto max-w-[1500px]">
           <div className="mb-12 max-w-4xl">
             <p className="mb-5 text-xs font-bold uppercase tracking-[0.3em] text-orange-500">
               Find your Lifebox
             </p>
+
             <h2 className="text-5xl font-black uppercase leading-[0.88] tracking-[-0.06em] md:text-8xl">
               ENCONTRE
               <br />
@@ -527,7 +571,7 @@ function LifeBoxHome() {
             </h2>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {locations.map((location) => (
               <article
                 key={`${location.city}-${location.neighborhood}`}
@@ -535,13 +579,14 @@ function LifeBoxHome() {
               >
                 <div className="flex items-start justify-between">
                   <MapPin size={20} className="text-orange-500" />
+
                   <ArrowUpRight
                     size={19}
                     className="text-white/25 transition group-hover:text-white"
                   />
                 </div>
 
-                <p className="mt-10 text-xs font-bold tracking-[0.2em] text-white/40">
+                <p className="mt-8 text-xs font-bold tracking-[0.2em] text-white/40">
                   {location.city}
                 </p>
 
@@ -552,17 +597,49 @@ function LifeBoxHome() {
                 <div className="mt-6 grid grid-cols-2 gap-2">
                   <a
                     href={location.menu}
+                    target="_blank"
+                    rel="noreferrer"
                     className="rounded-xl border border-white/10 px-3 py-3 text-center text-[10px] font-black uppercase transition hover:bg-white hover:text-black"
                   >
                     Cardápio
                   </a>
+
                   <a
                     href={location.ifood}
+                    target="_blank"
+                    rel="noreferrer"
                     className="rounded-xl bg-orange-500 px-3 py-3 text-center text-[10px] font-black uppercase transition hover:bg-orange-400"
                   >
-                    Pedir
+                    iFood
+                  </a>
+
+                  <a
+                    href={WAITLIST_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-xl border border-white/10 px-3 py-3 text-center text-[10px] font-black uppercase transition hover:bg-white hover:text-black"
+                  >
+                    Fila
+                  </a>
+
+                  <a
+                    href={GOOGLE_MAPS_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-xl border border-white/10 px-3 py-3 text-center text-[10px] font-black uppercase transition hover:bg-white hover:text-black"
+                  >
+                    Como chegar
                   </a>
                 </div>
+
+                <a
+                  href={CAREERS_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 flex w-full items-center justify-center rounded-xl border border-white/10 px-3 py-3 text-[10px] font-black uppercase transition hover:bg-orange-500 hover:text-white"
+                >
+                  Trabalhe conosco
+                </a>
               </article>
             ))}
           </div>
@@ -613,6 +690,7 @@ function LifeBoxHome() {
               <p className="mb-5 text-xs font-bold uppercase tracking-[0.3em] text-orange-500">
                 Social
               </p>
+
               <h2 className="text-5xl font-black uppercase leading-[0.9] tracking-[-0.06em] md:text-7xl">
                 VEM VIVER
                 <br />
@@ -654,7 +732,10 @@ function LifeBoxHome() {
       </section>
 
       {/* CAREERS */}
-      <section id="carreiras" className="bg-[#080808] px-5 py-24 md:px-10 md:py-32">
+      <section
+        id="carreiras"
+        className="bg-[#080808] px-5 py-24 md:px-10 md:py-32"
+      >
         <div className="mx-auto max-w-[1500px] rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 md:p-16">
           <div className="grid gap-10 md:grid-cols-[1fr_auto] md:items-end">
             <div>
@@ -675,7 +756,9 @@ function LifeBoxHome() {
             </div>
 
             <a
-              href="[CAREERS_URL]"
+              href={CAREERS_URL}
+              target="_blank"
+              rel="noreferrer"
               className="flex min-h-14 items-center justify-center gap-3 rounded-full bg-white px-7 font-black text-black transition hover:bg-orange-500 hover:text-white"
             >
               TRABALHE CONOSCO
@@ -714,7 +797,7 @@ function LifeBoxHome() {
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <a
-                href="#cardapio"
+                href="#unidades"
                 className="flex min-h-14 items-center justify-center gap-3 rounded-full bg-orange-500 px-7 font-black transition hover:bg-orange-400"
               >
                 PEDIR AGORA
@@ -741,6 +824,7 @@ function LifeBoxHome() {
               <div className="text-4xl font-black tracking-[-0.08em]">
                 LIFE<span className="text-orange-500">BOX</span>
               </div>
+
               <p className="mt-4 text-sm text-white/40">
                 Burger • Steaks • Shakes
               </p>
@@ -750,13 +834,16 @@ function LifeBoxHome() {
               <p className="mb-5 text-xs font-bold uppercase tracking-widest text-white/30">
                 Navegação
               </p>
+
               <div className="flex flex-col gap-3 text-sm text-white/60">
                 <a href="#cardapio" className="hover:text-white">
                   Cardápio
                 </a>
+
                 <a href="#unidades" className="hover:text-white">
                   Unidades
                 </a>
+
                 <a href="#carreiras" className="hover:text-white">
                   Trabalhe Conosco
                 </a>
@@ -767,6 +854,7 @@ function LifeBoxHome() {
               <p className="mb-5 text-xs font-bold uppercase tracking-widest text-white/30">
                 Social
               </p>
+
               <a
                 href="https://www.instagram.com/lifeboxburger/"
                 target="_blank"
@@ -780,7 +868,11 @@ function LifeBoxHome() {
           </div>
 
           <div className="flex flex-col justify-between gap-4 pt-8 text-xs text-white/30 sm:flex-row">
-            <p>© {new Date().getFullYear()} LIFEBOX. Todos os direitos reservados.</p>
+            <p>
+              © {new Date().getFullYear()} LIFEBOX. Todos os direitos
+              reservados.
+            </p>
+
             <p>Uma experiência além do burger.</p>
           </div>
         </div>
@@ -789,7 +881,7 @@ function LifeBoxHome() {
       {/* MOBILE CTA */}
       <div className="fixed inset-x-4 bottom-4 z-40 lg:hidden">
         <a
-          href="#cardapio"
+          href="#unidades"
           className="flex h-14 items-center justify-center gap-2 rounded-full bg-orange-500 text-sm font-black text-white shadow-2xl shadow-black/50"
         >
           <ShoppingBag size={18} />
