@@ -226,17 +226,24 @@ function LifeBoxHome() {
         className="relative flex min-h-screen items-center overflow-hidden"
       >
         {/* VIDEO */}
-        <video
-          className="absolute inset-0 h-full w-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          poster="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=2000&q=90"
-        >
-          <source src="/videos/lifebox-burger-loop.mp4" type="video/mp4" />
-        </video>
+       <video
+  className="absolute inset-0 h-full w-full object-cover"
+  autoPlay
+  muted
+  loop
+  playsInline
+  preload="auto"
+  poster="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=2000&q=90"
+  style={{ minWidth: "100%", minHeight: "100%" }}
+  onError={(e) => {
+    console.error("ERRO AO CARREGAR VÍDEO:", e.currentTarget.error);
+  }}
+>
+  <source
+    src="/videos/lifebox-burger-loop.mp4"
+    type="video/mp4"
+  />
+</video>
 
         {/* ESCURECIMENTO CINEMÁTICO */}
         <div className="absolute inset-0 bg-black/45" />
