@@ -1,10 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 
-// IMPORTANTE: a política de uso do Nominatim exige um identificador válido
-// (User-Agent com nome do app + contato). Troque o e-mail abaixo pelo seu.
+// IMPORTANTE: identifica sua aplicação nas chamadas ao Nominatim e ao
+// Overpass. O Nominatim exige isso na política de uso deles; o Overpass
+// também tende a bloquear requisições sem identificação.
+// Troque o e-mail abaixo pelo seu.
 // https://operations.osmfoundation.org/policies/nominatim/
-const NOMINATIM_USER_AGENT =
-  "LeadHunter/1.0 (contato: fabioeanieli@gmail.com)";
+const APP_USER_AGENT = "LeadHunter/1.0 (contato: seu-email@exemplo.com)";
 
 const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
 const NOMINATIM_ENDPOINT = "https://nominatim.openstreetmap.org/search";
@@ -83,7 +84,7 @@ async function geocodeCity(query: string): Promise<Bbox | null> {
   )}`;
 
   const response = await fetch(url, {
-    headers: { "User-Agent": NOMINATIM_USER_AGENT },
+    headers: { "User-Agent": APP_USER_AGENT },
   });
 
   if (!response.ok) return null;
@@ -116,7 +117,10 @@ function buildOverpassQuery(
 async function runOverpassQuery(query: string): Promise<OverpassElement[]> {
   const response = await fetch(OVERPASS_ENDPOINT, {
     method: "POST",
-    headers: { "Content-Type": "text/plain" },
+    headers: {
+      "Content-Type": "text/plain",
+      "User-Agent": APP_USER_AGENT,
+    },
     body: query,
   });
 
@@ -219,9 +223,11 @@ export const searchLeadsServerFn = createServerFn({ method: "POST" })
       // Roda poucas consultas em paralelo por vez: o Overpass é um serviço
       // público e gratuito, então evitamos sobrecarregá-lo.
       const concurrency = 2;
+      const errors: string[] = [];
+
       for (let i = 0; i < targetStates.length; i += concurrency) {
         const batch = targetStates.slice(i, i + concurrency);
-        const batchResults = await Promise.all(
+        const batchResults = await Promise.allSettled(
           batch.map(async (uf) => {
             const filter = `(area.searchArea)`;
             const query = `[out:json][timeout:50];\narea["ISO3166-2"="BR-${uf}"]["admin_level"="4"]->.searchArea;\n(\n  ${tagPairs
@@ -231,14 +237,29 @@ export const searchLeadsServerFn = createServerFn({ method: "POST" })
               ])
               .join("\n  ")}\n);\nout center 40;`;
 
-            try {
-              return await runOverpassQuery(query);
-            } catch {
-              return []; // Um estado falhar não deve derrubar a busca toda.
-            }
+            return runOverpassQuery(query);
           })
         );
-        rawResults.push(...batchResults.flat());
+
+        for (const result of batchResults) {
+          if (result.status === "fulfilled") {
+            rawResults.push(...result.value);
+          } else {
+            errors.push(
+              result.reason instanceof Error
+                ? result.reason.message
+                : String(result.reason)
+            );
+          }
+        }
+      }
+
+      // Se TODAS as consultas falharam, algo está errado de verdade (rede,
+      // bloqueio, timeout) — melhor mostrar o erro do que fingir "0 leads".
+      if (rawResults.length === 0 && errors.length > 0) {
+        throw new Error(
+          `Falha ao consultar o OpenStreetMap em todos os estados. Detalhe: ${errors[0]}`
+        );
       }
     }
 
@@ -258,4 +279,3 @@ export const searchLeadsServerFn = createServerFn({ method: "POST" })
 
     return leads;
   });
-
