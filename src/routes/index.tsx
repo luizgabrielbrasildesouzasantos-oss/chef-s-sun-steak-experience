@@ -1,684 +1,1473 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
-  ArrowRight,
-  Clock3,
-  Instagram,
+  ArrowUpRight,
+  BarChart3,
+  Bell,
+  Building2,
+  Check,
+  ChevronDown,
+  Download,
+  ExternalLink,
+  Filter,
+  Flame,
+  Globe2,
+  LayoutDashboard,
+  ListFilter,
   MapPin,
   Menu,
-  Play,
+  MessageCircle,
+  MoreHorizontal,
+  Phone,
+  Plus,
+  Search,
+  Settings,
+  SlidersHorizontal,
   Sparkles,
-  Star,
-  Utensils,
+  Target,
+  Trash2,
+  Users,
   X,
-} from "lucide-react"
-import { useEffect, useState } from "react"
+} from "lucide-react";
 
-export const Route = createFileRoute("/")({
-  component: LifeBoxHome,
-})
+type LeadStatus =
+  | "Novo"
+  | "Contatado"
+  | "Respondeu"
+  | "Interessado"
+  | "Proposta"
+  | "Cliente"
+  | "Sem interesse";
 
-const CAREERS_URL =
-  "https://vendoorvagas.com.br/vagas/?city=Goi%C3%A2nia&q=Lifebox+&cityName=Goi%C3%A2nia"
+type Lead = {
+  id: string;
+  name: string;
+  category: string;
+  city: string;
+  state: string;
+  address: string;
+  rating: number;
+  reviews: number;
+  phone: string;
+  website: string | null;
+  mapsUrl: string;
+  instagram?: string;
+  status: LeadStatus;
+  notes: string;
+  score: number;
+  signals: string[];
+  lastSeen: string;
+};
 
-const WAITLIST_URL =
-  "https://www.vucafood.com.br/lifeboxburger/1/fila-de-espera"
+const INITIAL_LEADS: Lead[] = [
+  {
+    id: "1",
+    name: "Studio Bella Estética",
+    category: "Clínica de estética",
+    city: "Belo Horizonte",
+    state: "MG",
+    address: "Lourdes, Belo Horizonte - MG",
+    rating: 4.8,
+    reviews: 327,
+    phone: "(31) 99842-1177",
+    website: null,
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Studio+Bella+Estetica+Belo+Horizonte",
+    instagram: "https://instagram.com/",
+    status: "Novo",
+    notes: "",
+    score: 9.4,
+    signals: ["Sem site", "327 avaliações", "Nota 4.8", "Telefone"],
+    lastSeen: "Agora",
+  },
+  {
+    id: "2",
+    name: "Barbearia Prime BH",
+    category: "Barbearia",
+    city: "Belo Horizonte",
+    state: "MG",
+    address: "Savassi, Belo Horizonte - MG",
+    rating: 4.7,
+    reviews: 481,
+    phone: "(31) 99120-3388",
+    website: null,
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Barbearia+Prime+BH",
+    status: "Novo",
+    notes: "",
+    score: 9.2,
+    signals: ["Sem site", "481 avaliações", "Nota 4.7", "Telefone"],
+    lastSeen: "Agora",
+  },
+  {
+    id: "3",
+    name: "Ponto do Sabor",
+    category: "Restaurante",
+    city: "Goiânia",
+    state: "GO",
+    address: "Setor Bueno, Goiânia - GO",
+    rating: 4.6,
+    reviews: 912,
+    phone: "(62) 99810-4431",
+    website: null,
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Ponto+do+Sabor+Goiania",
+    status: "Contatado",
+    notes: "Encontrado no Google Maps.",
+    score: 9.1,
+    signals: ["Sem site", "912 avaliações", "Nota 4.6", "Telefone"],
+    lastSeen: "Hoje",
+  },
+  {
+    id: "4",
+    name: "Clínica Vida & Forma",
+    category: "Clínica de estética",
+    city: "Campinas",
+    state: "SP",
+    address: "Cambuí, Campinas - SP",
+    rating: 4.9,
+    reviews: 204,
+    phone: "(19) 99712-6632",
+    website: null,
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Clinica+Vida+Forma+Campinas",
+    status: "Interessado",
+    notes: "Pediu exemplos de sites.",
+    score: 9.0,
+    signals: ["Sem site", "204 avaliações", "Nota 4.9", "Telefone"],
+    lastSeen: "Ontem",
+  },
+  {
+    id: "5",
+    name: "Casa do Churrasco",
+    category: "Restaurante",
+    city: "Brasília",
+    state: "DF",
+    address: "Águas Claras, Brasília - DF",
+    rating: 4.5,
+    reviews: 638,
+    phone: "(61) 99611-2088",
+    website: null,
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Casa+do+Churrasco+Brasilia",
+    status: "Novo",
+    notes: "",
+    score: 8.8,
+    signals: ["Sem site", "638 avaliações", "Nota 4.5"],
+    lastSeen: "Hoje",
+  },
+  {
+    id: "6",
+    name: "Espaço Beleza Natural",
+    category: "Salão de beleza",
+    city: "Ribeirão Preto",
+    state: "SP",
+    address: "Alto da Boa Vista, Ribeirão Preto - SP",
+    rating: 4.8,
+    reviews: 156,
+    phone: "(16) 99188-3304",
+    website: null,
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Espaco+Beleza+Natural+Ribeirao+Preto",
+    status: "Novo",
+    notes: "",
+    score: 8.7,
+    signals: ["Sem site", "156 avaliações", "Nota 4.8"],
+    lastSeen: "Hoje",
+  },
+  {
+    id: "7",
+    name: "Odonto Prime",
+    category: "Clínica odontológica",
+    city: "Curitiba",
+    state: "PR",
+    address: "Batel, Curitiba - PR",
+    rating: 4.9,
+    reviews: 341,
+    phone: "(41) 99551-8840",
+    website: "https://odontoprime.example.com",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Odonto+Prime+Curitiba",
+    status: "Novo",
+    notes: "",
+    score: 6.2,
+    signals: ["Site encontrado", "341 avaliações", "Nota 4.9"],
+    lastSeen: "Hoje",
+  },
+  {
+    id: "8",
+    name: "Auto Center Horizonte",
+    category: "Oficina mecânica",
+    city: "São Paulo",
+    state: "SP",
+    address: "Tatuapé, São Paulo - SP",
+    rating: 4.4,
+    reviews: 522,
+    phone: "(11) 99412-7622",
+    website: null,
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Auto+Center+Horizonte+Sao+Paulo",
+    status: "Sem interesse",
+    notes: "Já possui fornecedor.",
+    score: 7.6,
+    signals: ["Sem site", "522 avaliações", "Telefone"],
+    lastSeen: "2 dias",
+  },
+];
 
-const GOOGLE_MAPS_URL =
-  "https://www.google.com/searchviewer/10?sca_esv=15948584a4935e14&output=search&svid=CAwSKRInCgNwdESIE9oWXdlREE2TUhnNE5UVTNNek0yWlRsaFl6UXhNRGxoGAo"
+const statusOptions: LeadStatus[] = [
+  "Novo",
+  "Contatado",
+  "Respondeu",
+  "Interessado",
+  "Proposta",
+  "Cliente",
+  "Sem interesse",
+];
 
-const locations = [
-  {
-    city: "GOIÂNIA",
-    neighborhood: "Setor Oeste",
-    menu: "https://www.vucafood.com.br/lifeboxburger/1/cardapio-digital",
-    ifood:
-      "https://www.ifood.com.br/delivery/goiania-go/lifebox-burger---setor-oeste-setor-oeste/9a68c339-3db3-447f-b5dc-299723b1dbc2?UTM_Medium=share",
-  },
-  {
-    city: "GOIÂNIA",
-    neighborhood: "Jardim Goiás",
-    menu: "https://www.vucafood.com.br/lifeboxburger/2/cardapio-digital",
-    ifood:
-      "https://www.ifood.com.br/delivery/goiania-go/lifebox---jd-goias-jardim-goias/4788c1db-008b-4ac2-bdfb-915f428af8b4?UTM_Medium=share",
-  },
-  {
-    city: "BRASÍLIA",
-    neighborhood: "Águas Claras",
-    menu: "https://www.vucafood.com.br/lifeboxburger/3/cardapio-digital",
-    ifood:
-      "https://www.ifood.com.br/delivery/brasilia-df/lifebox---aguas-claras-norte-aguas-claras/918f9427-cc7a-4e74-9b6c-57fb18d4f5e9",
-  },
-  {
-    city: "BRASÍLIA",
-    neighborhood: "Lago Sul",
-    menu: "https://www.vucafood.com.br/lifeboxburger/lago-sul/cardapio-digital",
-    ifood:
-      "https://www.ifood.com.br/delivery/brasilia-df/lifebox---lago-sul-asa-sul/376817bb-fe9b-4ad4-b6aa-86eac4e35400",
-  },
-  {
-    city: "BELO HORIZONTE",
-    neighborhood: "Savassi",
-    menu: "https://www.vucafood.com.br/lifeboxburger/Savassi/cardapio-digital",
-    ifood:
-      "https://www.ifood.com.br/delivery/belo-horizonte-mg/lifebox-savassi/82961731-2e86-45e5-a6cb-ceea93018708",
-  },
-  {
-    city: "BELO HORIZONTE",
-    neighborhood: "Buritis",
-    menu: "https://www.vucafood.com.br/lifeboxburger/1924/cardapio-digital",
-    ifood:
-      "https://www.ifood.com.br/delivery/belo-horizonte-mg/lifebox-buritis---bh-estoril/c07bc283-77f6-4b8d-9fcb-c24de5986705",
-  },
-  {
-    city: "SÃO PAULO",
-    neighborhood: "Campinas",
-    menu: "https://www.vucafood.com.br/lifeboxburger/campinas-sp/cardapio-digital",
-    ifood:
-      "https://www.ifood.com.br/delivery/campinas-sp/lifebox----campinas-cambui/8ccab3ee-bf11-44c4-b9de-6b544ecc9828",
-  },
-  {
-    city: "SÃO PAULO",
-    neighborhood: "Ribeirão Preto",
-    menu: "https://www.vucafood.com.br/lifeboxburger/2384/cardapio-digital",
-    ifood:
-      "https://www.ifood.com.br/delivery/ribeirao-preto-sp/lifebox-burger---ribeirao-preto-alto-da-boa-vista/dc1490de-7459-4f5c-a345-0bea72609fe1?utm_medium=share",
-  },
-]
+const categories = [
+  "Todos os nichos",
+  "Clínica de estética",
+  "Barbearia",
+  "Restaurante",
+  "Salão de beleza",
+  "Clínica odontológica",
+  "Oficina mecânica",
+];
 
-const burgers = [
-  {
-    name: "PICANHA PREMIUM",
-    image:
-      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=90",
-  },
-  {
-    name: "TEXANO",
-    image:
-      "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=90",
-  },
-  {
-    name: "TITAN BURGER",
-    image:
-      "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&w=1200&q=90",
-  },
-  {
-    name: "SMASH LIFE",
-    image:
-      "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=1200&q=90",
-  },
-]
+const states = [
+  "Brasil inteiro",
+  "MG",
+  "SP",
+  "GO",
+  "DF",
+  "PR",
+  "RJ",
+  "SC",
+  "RS",
+];
 
-const shakes = [
-  {
-    name: "SHAKES LIFEBOX",
-    image:
-      "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=1000&q=90",
-  },
-  {
-    name: "CHOCO LIFE",
-    image:
-      "https://images.unsplash.com/photo-1553787499-6f0f9e1f7e0c?auto=format&fit=crop&w=1000&q=90",
-  },
-  {
-    name: "ENCANTO DE UVA",
-    image:
-      "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=1000&q=90",
-  },
-]
+function scoreLabel(score: number) {
+  if (score >= 9) return "Alta oportunidade";
+  if (score >= 8) return "Boa oportunidade";
+  return "Oportunidade";
+}
 
-function LifeBoxHome() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [activeLocation, setActiveLocation] = useState(0)
+function scoreClass(score: number) {
+  if (score >= 9) return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
+  if (score >= 8) return "text-amber-300 bg-amber-300/10 border-amber-300/20";
+  return "text-zinc-300 bg-white/5 border-white/10";
+}
+
+function escapeCsv(value: string) {
+  return `"${value.replaceAll('"', '""')}"`;
+}
+
+export default function LeadHunter() {
+  const [leads, setLeads] = useState<Lead[]>(() => {
+    try {
+      const saved = localStorage.getItem("sitehunter-leads");
+      return saved ? JSON.parse(saved) : INITIAL_LEADS;
+    } catch {
+      return INITIAL_LEADS;
+    }
+  });
+
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("Todos os nichos");
+  const [state, setState] = useState("Brasil inteiro");
+  const [city, setCity] = useState("");
+  const [onlyNoWebsite, setOnlyNoWebsite] = useState(true);
+  const [minRating, setMinRating] = useState("0");
+  const [minReviews, setMinReviews] = useState("0");
+  const [sort, setSort] = useState<"score" | "reviews" | "rating">("score");
+  const [statusFilter, setStatusFilter] = useState("Todos");
+  const [activeLead, setActiveLead] = useState<Lead | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [toast, setToast] = useState("");
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    document.documentElement.style.scrollBehavior = "smooth"
+    localStorage.setItem("sitehunter-leads", JSON.stringify(leads));
+  }, [leads]);
 
-    return () => {
-      document.documentElement.style.scrollBehavior = "auto"
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(""), 2600);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  const filteredLeads = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+
+    return [...leads]
+      .filter((lead) => {
+        if (onlyNoWebsite && lead.website) return false;
+        if (savedOnly && lead.status === "Novo") return false;
+
+        if (
+          category !== "Todos os nichos" &&
+          lead.category !== category
+        ) {
+          return false;
+        }
+
+        if (state !== "Brasil inteiro" && lead.state !== state) {
+          return false;
+        }
+
+        if (
+          city.trim() &&
+          !lead.city.toLowerCase().includes(city.trim().toLowerCase())
+        ) {
+          return false;
+        }
+
+        if (Number(minRating) && lead.rating < Number(minRating)) {
+          return false;
+        }
+
+        if (Number(minReviews) && lead.reviews < Number(minReviews)) {
+          return false;
+        }
+
+        if (
+          statusFilter !== "Todos" &&
+          lead.status !== statusFilter
+        ) {
+          return false;
+        }
+
+        if (
+          normalized &&
+          !`${lead.name} ${lead.category} ${lead.city} ${lead.state}`
+            .toLowerCase()
+            .includes(normalized)
+        ) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sort === "reviews") return b.reviews - a.reviews;
+        if (sort === "rating") return b.rating - a.rating;
+        return b.score - a.score;
+      });
+  }, [
+    leads,
+    query,
+    category,
+    state,
+    city,
+    onlyNoWebsite,
+    minRating,
+    minReviews,
+    sort,
+    statusFilter,
+    savedOnly,
+  ]);
+
+  const noWebsiteCount = leads.filter((lead) => !lead.website).length;
+  const highOpportunity = leads.filter((lead) => lead.score >= 9).length;
+  const contacted = leads.filter(
+    (lead) =>
+      lead.status !== "Novo" &&
+      lead.status !== "Sem interesse"
+  ).length;
+
+  const updateLead = (id: string, patch: Partial<Lead>) => {
+    setLeads((current) =>
+      current.map((lead) =>
+        lead.id === id ? { ...lead, ...patch } : lead
+      )
+    );
+
+    if (activeLead?.id === id) {
+      setActiveLead((current) =>
+        current ? { ...current, ...patch } : current
+      );
     }
-  }, [])
+  };
 
-  const selectedLocation = locations[activeLocation]
+  const runSearch = async () => {
+    setSearching(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 650));
+
+    setSearching(false);
+    setToast(
+      "Busca simulada concluída. A interface já está pronta para conectar à API do Google Places."
+    );
+  };
+
+  const openWhatsApp = (lead: Lead) => {
+    const digits = lead.phone.replace(/\D/g, "");
+    const message = `Olá, ${lead.name}! Tudo bem? Encontrei o perfil da empresa no Google e queria apresentar uma ideia de site profissional para vocês. Posso te mostrar uma demonstração?`;
+    window.open(
+      `https://wa.me/55${digits}?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+    updateLead(lead.id, { status: "Contatado" });
+  };
+
+  const exportCsv = () => {
+    const header = [
+      "Empresa",
+      "Categoria",
+      "Cidade",
+      "Estado",
+      "Avaliação",
+      "Avaliações",
+      "Telefone",
+      "Site",
+      "Score",
+      "Status",
+      "Observações",
+    ];
+
+    const rows = filteredLeads.map((lead) => [
+      lead.name,
+      lead.category,
+      lead.city,
+      lead.state,
+      String(lead.rating),
+      String(lead.reviews),
+      lead.phone,
+      lead.website || "",
+      String(lead.score),
+      lead.status,
+      lead.notes,
+    ]);
+
+    const csv = [header, ...rows]
+      .map((row) => row.map(escapeCsv).join(","))
+      .join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `sitehunter-leads-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    setToast(`${filteredLeads.length} leads exportados.`);
+  };
+
+  const deleteLead = (id: string) => {
+    setLeads((current) => current.filter((lead) => lead.id !== id));
+    setActiveLead(null);
+    setToast("Lead removido.");
+  };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#080808] text-white">
-      {/* HEADER */}
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-black/55 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
-          <a
-            href="#inicio"
-            className="text-2xl font-black tracking-[-0.08em] transition hover:scale-105"
-          >
-            LIFEBOX<span className="text-[#ff5a1f]">.</span>
-          </a>
+    <div className="min-h-screen bg-[#07090d] text-zinc-100 selection:bg-emerald-400 selection:text-black">
+      <style>{`
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { margin: 0; background: #07090d; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #07090d; }
+        ::-webkit-scrollbar-thumb { background: #272b32; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3a404a; }
 
-          <nav className="hidden items-center gap-8 text-[11px] font-bold uppercase tracking-[0.2em] text-white/75 lg:flex">
-            <a className="transition hover:text-white" href="#inicio">
-              Início
-            </a>
-            <a className="transition hover:text-white" href="#cardapio">
-              Cardápio
-            </a>
-            <a className="transition hover:text-white" href="#unidades">
-              Unidades
-            </a>
-            <a className="transition hover:text-white" href="#sobre">
-              Sobre
-            </a>
-            <a
-              className="transition hover:text-white"
-              href={CAREERS_URL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Trabalhe Conosco
-            </a>
-          </nav>
+        .sh-grid {
+          background-image:
+            linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+          background-size: 44px 44px;
+        }
 
-          <a
-            href="#unidades"
-            className="hidden rounded-full bg-[#ff5a1f] px-6 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-white shadow-[0_10px_40px_rgba(255,90,31,0.25)] transition hover:scale-105 hover:bg-[#ff6d38] lg:block"
-          >
-            Pedir agora
-          </a>
+        .sh-glow {
+          background:
+            radial-gradient(circle at 70% 0%, rgba(52,211,153,.10), transparent 28%),
+            radial-gradient(circle at 0% 20%, rgba(99,102,241,.07), transparent 25%);
+        }
 
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 lg:hidden"
-            aria-label="Abrir menu"
-          >
-            {menuOpen ? <X size={21} /> : <Menu size={21} />}
-          </button>
-        </div>
+        .sh-card {
+          background: rgba(14,17,23,.82);
+          border: 1px solid rgba(255,255,255,.075);
+          box-shadow: 0 20px 70px rgba(0,0,0,.16);
+          backdrop-filter: blur(18px);
+        }
 
-        {menuOpen && (
-          <div className="border-t border-white/10 bg-black/95 px-5 py-6 lg:hidden">
-            <div className="flex flex-col gap-5 text-sm font-bold uppercase tracking-[0.15em]">
-              <a href="#inicio" onClick={() => setMenuOpen(false)}>
-                Início
-              </a>
-              <a href="#cardapio" onClick={() => setMenuOpen(false)}>
-                Cardápio
-              </a>
-              <a href="#unidades" onClick={() => setMenuOpen(false)}>
-                Unidades
-              </a>
-              <a href="#sobre" onClick={() => setMenuOpen(false)}>
-                Sobre
-              </a>
-              <a
-                href={CAREERS_URL}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => setMenuOpen(false)}
+        .sh-input {
+          background: rgba(255,255,255,.035);
+          border: 1px solid rgba(255,255,255,.085);
+          outline: none;
+          transition: border .2s, background .2s, box-shadow .2s;
+        }
+
+        .sh-input:focus {
+          border-color: rgba(52,211,153,.55);
+          background: rgba(255,255,255,.055);
+          box-shadow: 0 0 0 3px rgba(52,211,153,.07);
+        }
+
+        .sh-hover {
+          transition: transform .2s, border-color .2s, background .2s;
+        }
+
+        .sh-hover:hover {
+          transform: translateY(-1px);
+          border-color: rgba(255,255,255,.15);
+          background: rgba(255,255,255,.045);
+        }
+
+        @keyframes shPulse {
+          0%,100% { opacity: .45; transform: scale(.94); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+
+        .sh-pulse { animation: shPulse 2s ease-in-out infinite; }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            scroll-behavior: auto !important;
+            animation: none !important;
+            transition: none !important;
+          }
+        }
+      `}</style>
+
+      <div className="sh-grid sh-glow min-h-screen">
+        {/* TOP BAR */}
+        <header className="sticky top-0 z-40 border-b border-white/[.06] bg-[#07090d]/85 backdrop-blur-2xl">
+          <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 lg:px-7">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen((value) => !value)}
+                className="rounded-lg p-2 text-zinc-400 hover:bg-white/5 hover:text-white lg:hidden"
+                aria-label="Abrir menu"
               >
-                Trabalhe Conosco
-              </a>
-            </div>
-          </div>
-        )}
-      </header>
+                <Menu size={20} />
+              </button>
 
-      {/* HERO COM VÍDEO */}
-      <section
-        id="inicio"
-        className="relative flex min-h-screen items-center overflow-hidden"
-      >
-        {/* VIDEO */}
-       <video
-  className="absolute inset-0 h-full w-full object-cover"
-  autoPlay
-  muted
-  loop
-  playsInline
-  preload="auto"
-  poster="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=2000&q=90"
-  style={{ minWidth: "100%", minHeight: "100%" }}
-  onError={(e) => {
-    console.error("ERRO AO CARREGAR VÍDEO:", e.currentTarget.error);
-  }}
->
-  <source
-    src="/videos/lifebox-burger-loop.mp4"
-    type="video/mp4"
-  />
-</video>
-
-        {/* ESCURECIMENTO CINEMÁTICO */}
-        <div className="absolute inset-0 bg-black/45" />
-
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/45 to-black/20" />
-
-        <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-black/30" />
-
-        {/* GRANDE GLOW */}
-        <div className="pointer-events-none absolute -bottom-40 left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-[#ff5a1f]/10 blur-[130px]" />
-
-        {/* CONTEÚDO */}
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-28 pt-36 lg:px-8">
-          <div className="max-w-4xl">
-            <div className="mb-6 flex items-center gap-3">
-              <span className="h-px w-10 bg-[#ff5a1f]" />
-
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff7040]">
-                Burger • Steaks • Shakes
-              </span>
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400 text-black shadow-lg shadow-emerald-400/10">
+                  <Target size={17} strokeWidth={2.7} />
+                </div>
+                <div>
+                  <div className="text-[14px] font-bold tracking-tight">
+                    SiteHunter
+                  </div>
+                  <div className="hidden text-[9px] font-medium uppercase tracking-[.22em] text-zinc-500 sm:block">
+                    Lead Intelligence
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <h1 className="max-w-4xl text-5xl font-black leading-[0.88] tracking-[-0.07em] sm:text-7xl md:text-8xl lg:text-[112px]">
-              MAIS QUE
-              <br />
-              UM BURGER.
-              <br />
-              <span className="text-[#ff5a1f]">UMA EXPERIÊNCIA.</span>
-            </h1>
-
-            <p className="mt-7 max-w-xl text-base leading-7 text-white/75 sm:text-lg">
-              Angus, ingredientes selecionados e combinações que fazem cada
-              mordida valer a pena.
-            </p>
-
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="#unidades"
-                className="group flex h-14 items-center justify-center gap-3 rounded-full bg-[#ff5a1f] px-8 text-xs font-black uppercase tracking-[0.18em] shadow-[0_15px_50px_rgba(255,90,31,0.3)] transition hover:scale-[1.03] hover:bg-[#ff6d38]"
-              >
-                Pedir agora
-                <ArrowRight
-                  size={17}
-                  className="transition group-hover:translate-x-1"
-                />
-              </a>
-
-              <a
-                href="#cardapio"
-                className="flex h-14 items-center justify-center gap-3 rounded-full border border-white/20 bg-white/5 px-8 text-xs font-black uppercase tracking-[0.18em] backdrop-blur-md transition hover:bg-white/10"
-              >
-                Ver cardápio
-              </a>
-            </div>
-          </div>
-
-          <div className="absolute bottom-8 left-5 hidden items-center gap-3 text-[9px] font-bold uppercase tracking-[0.3em] text-white/40 lg:flex">
-            <ArrowDown size={14} className="animate-bounce" />
-            Scroll para descobrir
-          </div>
-        </div>
-      </section>
-
-      {/* EXPERIÊNCIA */}
-      <section id="sobre" className="relative overflow-hidden py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <div>
-              <div className="mb-6 flex items-center gap-3">
-                <Sparkles size={16} className="text-[#ff5a1f]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ff5a1f]">
-                  A experiência LIFEBOX
+            <div className="hidden items-center gap-2 md:flex">
+              <div className="flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[.06] px-3 py-1.5">
+                <span className="sh-pulse h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[10px] font-medium text-emerald-300">
+                  SISTEMA ONLINE
                 </span>
               </div>
 
-              <h2 className="text-5xl font-black leading-[0.9] tracking-[-0.06em] sm:text-7xl">
-                BURGER,
-                <br />
-                STEAKS
-                <br />
-                <span className="text-white/30">& SHAKES.</span>
-              </h2>
-            </div>
-
-            <div className="lg:pl-16">
-              <p className="text-xl leading-8 text-white/70">
-                Não é só sobre comer. É sobre aquele momento em que o burger
-                chega à mesa, o queijo derrete, o cheiro toma conta e você sabe
-                que fez a escolha certa.
-              </p>
-
-              <div className="mt-8 grid grid-cols-2 gap-4">
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-                  <Utensils className="mb-5 text-[#ff5a1f]" size={23} />
-                  <p className="text-sm font-bold">Ingredientes selecionados</p>
-                </div>
-
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-                  <Star className="mb-5 text-[#ff5a1f]" size={23} />
-                  <p className="text-sm font-bold">Experiência única</p>
-                </div>
-              </div>
+              <button className="rounded-lg p-2 text-zinc-500 hover:bg-white/5 hover:text-zinc-200">
+                <Bell size={17} />
+              </button>
+              <button className="rounded-lg p-2 text-zinc-500 hover:bg-white/5 hover:text-zinc-200">
+                <Settings size={17} />
+              </button>
             </div>
           </div>
-        </div>
-      </section>
+        </header>
 
-      {/* BURGERS */}
-      <section id="cardapio" className="border-y border-white/5 bg-[#0d0d0d] py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mb-12 flex items-end justify-between gap-5">
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ff5a1f]">
-                Signature Burgers
-              </span>
-
-              <h2 className="mt-4 text-5xl font-black tracking-[-0.06em] sm:text-7xl">
-                SEU PRÓXIMO
-                <br />
-                <span className="text-white/30">FAVORITO.</span>
-              </h2>
-            </div>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {burgers.map((burger) => (
-              <div
-                key={burger.name}
-                className="group overflow-hidden rounded-[28px] border border-white/10 bg-[#111]"
-              >
-                <div className="relative aspect-[0.9] overflow-hidden">
-                  <img
-                    src={burger.image}
-                    alt={burger.name}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-
-                  <div className="absolute bottom-5 left-5 right-5">
-                    <h3 className="text-xl font-black tracking-tight">
-                      {burger.name}
-                    </h3>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FOOD PORN */}
-      <section className="relative overflow-hidden py-28 sm:py-40">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&w=2200&q=90"
-            alt=""
-            className="h-full w-full object-cover"
-          />
-
-          <div className="absolute inset-0 bg-black/65" />
-        </div>
-
-        <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="max-w-4xl">
-            <span className="text-[10px] font-black uppercase tracking-[0.35em] text-[#ff7040]">
-              Prepare-se
-            </span>
-
-            <h2 className="mt-5 text-6xl font-black leading-[0.85] tracking-[-0.07em] sm:text-8xl lg:text-[110px]">
-              VOCÊ VAI
-              <br />
-              SENTIR
-              <br />
-              <span className="text-[#ff5a1f]">VONTADE.</span>
-            </h2>
-          </div>
-        </div>
-      </section>
-
-      {/* SHAKES */}
-      <section className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mb-12">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ff5a1f]">
-              Para fechar
-            </span>
-
-            <h2 className="mt-4 text-5xl font-black tracking-[-0.06em] sm:text-7xl">
-              SHAKES &
-              <br />
-              <span className="text-white/30">SOBREMESAS.</span>
-            </h2>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-3">
-            {shakes.map((shake) => (
-              <div
-                key={shake.name}
-                className="group relative aspect-square overflow-hidden rounded-[30px] border border-white/10"
-              >
-                <img
-                  src={shake.image}
-                  alt={shake.name}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+        <div className="mx-auto flex max-w-[1500px]">
+          {/* SIDEBAR */}
+          <aside
+            className={`fixed bottom-0 left-0 top-16 z-30 w-64 border-r border-white/[.06] bg-[#090b10]/98 p-4 backdrop-blur-2xl transition-transform lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] lg:translate-x-0 ${
+              sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            <div className="flex h-full flex-col">
+              <div className="space-y-1">
+                <SidebarItem
+                  icon={<LayoutDashboard size={17} />}
+                  label="Visão geral"
+                  active
                 />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
-
-                <h3 className="absolute bottom-7 left-7 text-2xl font-black">
-                  {shake.name}
-                </h3>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* UNIDADES */}
-      <section
-        id="unidades"
-        className="border-t border-white/5 bg-[#0d0d0d] py-24 sm:py-32"
-      >
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mb-12">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ff5a1f]">
-              Encontre seu LIFEBOX
-            </span>
-
-            <h2 className="mt-4 text-5xl font-black tracking-[-0.06em] sm:text-7xl">
-              ESCOLHA SUA
-              <br />
-              <span className="text-white/30">UNIDADE.</span>
-            </h2>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2">
-            {locations.map((location, index) => (
-              <div
-                key={`${location.city}-${location.neighborhood}`}
-                className="rounded-[30px] border border-white/10 bg-white/[0.025] p-6 transition hover:border-white/20 sm:p-8"
-              >
-                <div className="flex items-start justify-between gap-5">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#ff5a1f]">
-                      {location.city}
-                    </p>
-
-                    <h3 className="mt-2 text-2xl font-black">
-                      {location.neighborhood}
-                    </h3>
-                  </div>
-
-                  <MapPin className="text-white/30" size={23} />
-                </div>
-
-                <div className="mt-7 grid grid-cols-2 gap-3">
-                  <a
-                    href={location.menu}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex h-12 items-center justify-center rounded-full bg-white text-xs font-black uppercase tracking-wider text-black transition hover:bg-[#ff5a1f] hover:text-white"
-                  >
-                    Cardápio
-                  </a>
-
-                  <a
-                    href={location.ifood}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex h-12 items-center justify-center rounded-full border border-white/15 bg-white/5 text-xs font-black uppercase tracking-wider transition hover:bg-white/10"
-                  >
-                    iFood
-                  </a>
-
-                  <a
-                    href={WAITLIST_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex h-12 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 text-xs font-black uppercase tracking-wider transition hover:bg-white/10"
-                  >
-                    <Clock3 size={14} />
-                    Fila
-                  </a>
-
-                  <a
-                    href={GOOGLE_MAPS_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex h-12 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 text-xs font-black uppercase tracking-wider transition hover:bg-white/10"
-                  >
-                    <MapPin size={14} />
-                    Como chegar
-                  </a>
-                </div>
-
-                <a
-                  href={CAREERS_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 flex h-11 items-center justify-center rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 transition hover:text-white"
-                >
-                  Trabalhe conosco
-                </a>
-
-                <button
-                  onClick={() => setActiveLocation(index)}
-                  className="sr-only"
-                  aria-label={`Selecionar ${location.neighborhood}`}
+                <SidebarItem
+                  icon={<Search size={17} />}
+                  label="Encontrar leads"
+                  onClick={() => {
+                    document
+                      .getElementById("search")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                    setSidebarOpen(false);
+                  }}
+                />
+                <SidebarItem
+                  icon={<Users size={17} />}
+                  label="Meus leads"
+                  onClick={() => setSavedOnly(true)}
+                />
+                <SidebarItem
+                  icon={<BarChart3 size={17} />}
+                  label="Performance"
                 />
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* INSTAGRAM */}
-      <section className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="rounded-[35px] border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.01] p-8 sm:p-14">
-            <div className="flex flex-col justify-between gap-10 md:flex-row md:items-end">
-              <div>
-                <Instagram size={28} className="mb-7 text-[#ff5a1f]" />
+              <div className="my-5 border-t border-white/[.06]" />
 
-                <h2 className="text-5xl font-black tracking-[-0.06em] sm:text-7xl">
-                  @LIFEBOXBURGER
-                </h2>
+              <div className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[.2em] text-zinc-600">
+                Ferramentas
+              </div>
 
-                <p className="mt-5 max-w-lg text-white/50">
-                  Acompanhe nossos burgers, novidades e tudo que acontece por
-                  trás da experiência LIFEBOX.
+              <div className="space-y-1">
+                <SidebarItem
+                  icon={<Flame size={17} />}
+                  label="Alta oportunidade"
+                  badge={String(highOpportunity)}
+                  onClick={() => {
+                    setSort("score");
+                    setOnlyNoWebsite(true);
+                  }}
+                />
+                <SidebarItem
+                  icon={<ListFilter size={17} />}
+                  label="Listas"
+                />
+                <SidebarItem
+                  icon={<Download size={17} />}
+                  label="Exportar"
+                  onClick={exportCsv}
+                />
+              </div>
+
+              <div className="mt-auto rounded-xl border border-emerald-400/10 bg-emerald-400/[.035] p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <Sparkles size={15} className="text-emerald-400" />
+                  <span className="text-xs font-semibold">
+                    Encontrar clientes
+                  </span>
+                </div>
+                <p className="text-[11px] leading-5 text-zinc-500">
+                  Priorize empresas sem site e com sinais de alta oportunidade.
                 </p>
               </div>
+            </div>
+          </aside>
 
-              <a
-                href="https://www.instagram.com/lifeboxburger/"
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-14 items-center justify-center gap-3 rounded-full bg-white px-7 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-[#ff5a1f] hover:text-white"
+          {sidebarOpen && (
+            <button
+              className="fixed inset-0 top-16 z-20 bg-black/60 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Fechar menu"
+            />
+          )}
+
+          {/* MAIN */}
+          <main className="min-w-0 flex-1 px-4 py-7 lg:px-8 lg:py-9">
+            <div className="mx-auto max-w-[1180px]">
+              {/* HERO */}
+              <section className="mb-8">
+                <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+                  <div>
+                    <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.2em] text-emerald-400">
+                      <span className="h-px w-5 bg-emerald-400" />
+                      Lead intelligence
+                    </div>
+                    <h1 className="max-w-3xl text-3xl font-semibold tracking-[-.04em] text-white sm:text-4xl lg:text-5xl">
+                      Encontre empresas que{" "}
+                      <span className="text-emerald-400">
+                        precisam de um site.
+                      </span>
+                    </h1>
+                    <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
+                      Pesquise negócios em qualquer região do Brasil, filtre
+                      oportunidades e organize sua prospecção em um só lugar.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={exportCsv}
+                    className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[.035] px-4 text-xs font-semibold text-zinc-300 hover:bg-white/[.07]"
+                  >
+                    <Download size={15} />
+                    Exportar
+                  </button>
+                </div>
+              </section>
+
+              {/* SEARCH */}
+              <section id="search" className="sh-card rounded-2xl p-4 sm:p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/[.06]">
+                      <Search size={14} className="text-zinc-300" />
+                    </div>
+                    <span className="text-sm font-semibold">
+                      Nova busca
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => setShowFilters((value) => !value)}
+                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] font-medium text-zinc-500 hover:bg-white/5 hover:text-zinc-200"
+                  >
+                    <SlidersHorizontal size={14} />
+                    Filtros avançados
+                  </button>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-[1.35fr_1fr_1fr_auto]">
+                  <label className="relative block">
+                    <Search
+                      size={16}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600"
+                    />
+                    <input
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Nicho, empresa ou palavra-chave..."
+                      className="sh-input h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white placeholder:text-zinc-600"
+                    />
+                  </label>
+
+                  <SelectField
+                    value={category}
+                    onChange={setCategory}
+                    options={categories}
+                    icon={<Building2 size={15} />}
+                  />
+
+                  <SelectField
+                    value={state}
+                    onChange={setState}
+                    options={states}
+                    icon={<MapPin size={15} />}
+                  />
+
+                  <button
+                    onClick={runSearch}
+                    disabled={searching}
+                    className="flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-xs font-black uppercase tracking-[.1em] text-[#04110b] transition hover:bg-emerald-300 disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {searching ? (
+                      <>
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                        Buscando
+                      </>
+                    ) : (
+                      <>
+                        Encontrar leads
+                        <ArrowUpRight size={16} />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {showFilters && (
+                  <div className="mt-4 grid gap-3 border-t border-white/[.06] pt-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <InputFilter
+                      label="Cidade"
+                      value={city}
+                      onChange={setCity}
+                      placeholder="Ex.: Belo Horizonte"
+                    />
+
+                    <SelectField
+                      value={minRating}
+                      onChange={setMinRating}
+                      label="Avaliação mínima"
+                      options={["0", "4.0", "4.5", "4.7", "4.8"]}
+                    />
+
+                    <SelectField
+                      value={minReviews}
+                      onChange={setMinReviews}
+                      label="Mínimo de avaliações"
+                      options={["0", "50", "100", "250", "500", "1000"]}
+                    />
+
+                    <SelectField
+                      value={sort}
+                      onChange={(value) =>
+                        setSort(value as "score" | "reviews" | "rating")
+                      }
+                      label="Ordenar por"
+                      options={["score", "reviews", "rating"]}
+                      display={{
+                        score: "Oportunidade",
+                        reviews: "Avaliações",
+                        rating: "Nota",
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setOnlyNoWebsite((value) => !value)}
+                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-semibold transition ${
+                      onlyNoWebsite
+                        ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
+                        : "border-white/10 bg-white/[.025] text-zinc-500"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        onlyNoWebsite ? "bg-emerald-400" : "bg-zinc-600"
+                      }`}
+                    />
+                    Somente sem site
+                  </button>
+
+                  <button
+                    onClick={() => setSavedOnly((value) => !value)}
+                    className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold transition ${
+                      savedOnly
+                        ? "border-indigo-400/25 bg-indigo-400/10 text-indigo-300"
+                        : "border-white/10 bg-white/[.025] text-zinc-500"
+                    }`}
+                  >
+                    Meus leads
+                  </button>
+
+                  <button
+                    onClick={() => setStatusFilter("Novo")}
+                    className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold ${
+                      statusFilter === "Novo"
+                        ? "border-white/20 bg-white/10 text-white"
+                        : "border-white/10 text-zinc-500"
+                    }`}
+                  >
+                    Novos
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setQuery("");
+                      setCategory("Todos os nichos");
+                      setState("Brasil inteiro");
+                      setCity("");
+                      setMinRating("0");
+                      setMinReviews("0");
+                      setStatusFilter("Todos");
+                      setSavedOnly(false);
+                      setOnlyNoWebsite(true);
+                    }}
+                    className="ml-auto text-[10px] font-medium text-zinc-600 hover:text-zinc-300"
+                  >
+                    Limpar filtros
+                  </button>
+                </div>
+              </section>
+
+              {/* METRICS */}
+              <section className="my-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <MetricCard
+                  label="Leads encontrados"
+                  value={leads.length}
+                  icon={<Users size={16} />}
+                  detail="+12% esta semana"
+                  positive
+                />
+                <MetricCard
+                  label="Sem site"
+                  value={noWebsiteCount}
+                  icon={<Globe2 size={16} />}
+                  detail={`${Math.round(
+                    (noWebsiteCount / Math.max(leads.length, 1)) * 100
+                  )}% da base`}
+                />
+                <MetricCard
+                  label="Alta oportunidade"
+                  value={highOpportunity}
+                  icon={<Flame size={16} />}
+                  detail="Score 9.0+"
+                  positive
+                />
+                <MetricCard
+                  label="Em prospecção"
+                  value={contacted}
+                  icon={<MessageCircle size={16} />}
+                  detail="Contato iniciado"
+                />
+              </section>
+
+              {/* RESULTS HEADER */}
+              <section className="mb-3 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-white">
+                      Oportunidades
+                    </h2>
+                    <span className="rounded-full bg-white/[.06] px-2 py-0.5 text-[10px] font-semibold text-zinc-500">
+                      {filteredLeads.length}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-zinc-600">
+                    Ordenado por potencial de oportunidade
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
+                    <Filter size={13} />
+                    Filtros ativos:
+                  </div>
+                  <span className="rounded-md border border-emerald-400/15 bg-emerald-400/[.06] px-2 py-1 text-[10px] text-emerald-300">
+                    Sem site
+                  </span>
+                </div>
+              </section>
+
+              {/* LEAD TABLE / CARDS */}
+              <section className="sh-card overflow-hidden rounded-2xl">
+                <div className="hidden grid-cols-[minmax(260px,1.5fr)_170px_150px_110px_110px_42px] gap-4 border-b border-white/[.06] px-5 py-3 text-[9px] font-bold uppercase tracking-[.16em] text-zinc-600 md:grid">
+                  <span>Empresa</span>
+                  <span>Localização</span>
+                  <span>Presença digital</span>
+                  <span>Reputação</span>
+                  <span>Oportunidade</span>
+                  <span />
+                </div>
+
+                {filteredLeads.length === 0 ? (
+                  <div className="px-6 py-20 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/[.04]">
+                      <Search size={19} className="text-zinc-600" />
+                    </div>
+                    <h3 className="mt-4 text-sm font-semibold">
+                      Nenhum lead encontrado
+                    </h3>
+                    <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-zinc-600">
+                      Ajuste os filtros ou faça uma nova busca para encontrar
+                      outras oportunidades.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-white/[.05]">
+                    {filteredLeads.map((lead) => (
+                      <LeadRow
+                        key={lead.id}
+                        lead={lead}
+                        onOpen={() => setActiveLead(lead)}
+                        onWhatsApp={() => openWhatsApp(lead)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* FOOTNOTE */}
+              <div className="mt-5 flex items-start gap-2 text-[10px] leading-5 text-zinc-700">
+                <Sparkles size={13} className="mt-0.5 shrink-0" />
+                <p>
+                  O score é uma heurística interna baseada nos sinais do lead.
+                  Na versão conectada, os dados serão obtidos por uma fonte
+                  externa de estabelecimentos e armazenados no seu banco.
+                </p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* DETAIL DRAWER */}
+      {activeLead && (
+        <div className="fixed inset-0 z-50">
+          <button
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setActiveLead(null)}
+            aria-label="Fechar"
+          />
+
+          <aside className="absolute bottom-0 right-0 top-0 w-full max-w-[520px] overflow-y-auto border-l border-white/[.08] bg-[#0b0e13] shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/[.06] bg-[#0b0e13]/90 px-5 py-4 backdrop-blur-xl">
+              <div className="text-[10px] font-bold uppercase tracking-[.18em] text-zinc-500">
+                Detalhes do lead
+              </div>
+              <button
+                onClick={() => setActiveLead(null)}
+                className="rounded-lg p-2 text-zinc-500 hover:bg-white/5 hover:text-white"
               >
-                Instagram
-                <ArrowRight size={16} />
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CARREIRAS */}
-      <section className="border-y border-white/5 bg-[#0d0d0d] py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-5 text-center lg:px-8">
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ff5a1f]">
-            Faça parte
-          </span>
-
-          <h2 className="mx-auto mt-5 max-w-4xl text-6xl font-black leading-[0.9] tracking-[-0.07em] sm:text-8xl">
-            QUER SER UM
-            <br />
-            <span className="text-[#ff5a1f]">LIFER?</span>
-          </h2>
-
-          <p className="mx-auto mt-7 max-w-xl text-white/55">
-            Venha fazer parte do time LIFEBOX.
-          </p>
-
-          <a
-            href={CAREERS_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-9 inline-flex h-14 items-center gap-3 rounded-full bg-[#ff5a1f] px-8 text-xs font-black uppercase tracking-[0.18em] transition hover:scale-105 hover:bg-[#ff6d38]"
-          >
-            Trabalhe conosco
-            <ArrowRight size={16} />
-          </a>
-        </div>
-      </section>
-
-      {/* CTA FINAL */}
-      <section className="relative overflow-hidden py-32 sm:py-44">
-        <div className="absolute inset-0 bg-[#ff5a1f]" />
-
-        <div className="absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-white/10 blur-[100px]" />
-
-        <div className="relative mx-auto max-w-7xl px-5 text-center lg:px-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60">
-            LIFEBOX BURGER
-          </p>
-
-          <h2 className="mt-5 text-6xl font-black leading-[0.85] tracking-[-0.07em] text-black sm:text-8xl lg:text-[110px]">
-            SEU PRÓXIMO
-            <br />
-            BURGER ESTÁ AQUI.
-          </h2>
-
-          <a
-            href="#unidades"
-            className="mt-10 inline-flex h-14 items-center gap-3 rounded-full bg-black px-9 text-xs font-black uppercase tracking-[0.18em] text-white transition hover:scale-105"
-          >
-            Pedir agora
-            <ArrowRight size={17} />
-          </a>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-black py-12">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-5 sm:flex-row sm:items-center lg:px-8">
-          <div>
-            <div className="text-2xl font-black tracking-[-0.08em]">
-              LIFEBOX<span className="text-[#ff5a1f]">.</span>
+                <X size={18} />
+              </button>
             </div>
 
-            <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-white/30">
-              Burger • Steaks • Shakes
-            </p>
-          </div>
+            <div className="p-5 sm:p-7">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/[.05]">
+                      <Building2 size={19} className="text-zinc-300" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold tracking-tight">
+                        {activeLead.name}
+                      </h2>
+                      <p className="mt-0.5 text-xs text-zinc-500">
+                        {activeLead.category}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
-            © {new Date().getFullYear()} LIFEBOX
-          </div>
+                <div
+                  className={`rounded-lg border px-2.5 py-2 text-center ${scoreClass(
+                    activeLead.score
+                  )}`}
+                >
+                  <div className="text-lg font-bold leading-none">
+                    {activeLead.score.toFixed(1)}
+                  </div>
+                  <div className="mt-1 text-[8px] font-bold uppercase tracking-wider">
+                    score
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-2">
+                <InfoMini
+                  label="Avaliação"
+                  value={`★ ${activeLead.rating}`}
+                />
+                <InfoMini
+                  label="Reviews"
+                  value={activeLead.reviews.toLocaleString("pt-BR")}
+                />
+                <InfoMini
+                  label="Website"
+                  value={activeLead.website ? "Encontrado" : "Não encontrado"}
+                />
+                <InfoMini label="Status" value={activeLead.status} />
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                {activeLead.signals.map((signal) => (
+                  <span
+                    key={signal}
+                    className="rounded-full border border-white/[.07] bg-white/[.03] px-2.5 py-1 text-[10px] text-zinc-400"
+                  >
+                    {signal}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-7 border-t border-white/[.06] pt-6">
+                <DetailLine
+                  icon={<MapPin size={15} />}
+                  label="Localização"
+                  value={`${activeLead.address}`}
+                />
+                <DetailLine
+                  icon={<Phone size={15} />}
+                  label="Telefone"
+                  value={activeLead.phone}
+                />
+                <DetailLine
+                  icon={<Globe2 size={15} />}
+                  label="Site"
+                  value={activeLead.website || "Nenhum site identificado"}
+                />
+              </div>
+
+              <div className="mt-7 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => openWhatsApp(activeLead)}
+                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 text-xs font-black text-[#04110b] hover:bg-emerald-300"
+                >
+                  <MessageCircle size={16} />
+                  WhatsApp
+                </button>
+
+                <a
+                  href={activeLead.mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.03] text-xs font-semibold text-zinc-300 hover:bg-white/[.06]"
+                >
+                  <ExternalLink size={15} />
+                  Google Maps
+                </a>
+              </div>
+
+              <div className="mt-8">
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-[.18em] text-zinc-600">
+                  Status da prospecção
+                </label>
+
+                <select
+                  value={activeLead.status}
+                  onChange={(event) =>
+                    updateLead(activeLead.id, {
+                      status: event.target.value as LeadStatus,
+                    })
+                  }
+                  className="sh-input h-11 w-full rounded-xl px-3 text-sm text-zinc-200"
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status} className="bg-[#0b0e13]">
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mt-5">
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-[.18em] text-zinc-600">
+                  Observações
+                </label>
+
+                <textarea
+                  value={activeLead.notes}
+                  onChange={(event) =>
+                    updateLead(activeLead.id, {
+                      notes: event.target.value,
+                    })
+                  }
+                  placeholder="Anote informações sobre este lead..."
+                  rows={5}
+                  className="sh-input w-full resize-none rounded-xl p-3 text-sm leading-6 text-zinc-200 placeholder:text-zinc-700"
+                />
+              </div>
+
+              <div className="mt-7 flex items-center justify-between border-t border-white/[.06] pt-5">
+                <button
+                  onClick={() => deleteLead(activeLead.id)}
+                  className="flex items-center gap-2 text-[11px] font-medium text-red-400/70 hover:text-red-400"
+                >
+                  <Trash2 size={14} />
+                  Excluir lead
+                </button>
+
+                <button
+                  onClick={() => {
+                    setToast("Alterações salvas.");
+                    setActiveLead(null);
+                  }}
+                  className="flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-xs font-bold text-black"
+                >
+                  <Check size={14} />
+                  Salvar
+                </button>
+              </div>
+            </div>
+          </aside>
         </div>
-      </footer>
+      )}
 
-      {/* CTA MOBILE */}
-      <div className="fixed bottom-4 left-4 right-4 z-40 lg:hidden">
-        <a
-          href="#unidades"
-          className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#ff5a1f] text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_15px_50px_rgba(255,90,31,0.4)]"
-        >
-          Pedir agora
-          <ArrowRight size={17} />
-        </a>
+      {/* TOAST */}
+      {toast && (
+        <div className="fixed bottom-5 left-1/2 z-[60] -translate-x-1/2 rounded-xl border border-white/10 bg-[#11151c]/95 px-4 py-3 text-xs font-medium text-zinc-200 shadow-2xl backdrop-blur-xl">
+          {toast}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SidebarItem({
+  icon,
+  label,
+  active,
+  badge,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  badge?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-medium transition ${
+        active
+          ? "bg-white/[.06] text-white"
+          : "text-zinc-500 hover:bg-white/[.035] hover:text-zinc-200"
+      }`}
+    >
+      <span className={active ? "text-emerald-400" : "text-zinc-600"}>
+        {icon}
+      </span>
+      <span className="flex-1">{label}</span>
+      {badge && (
+        <span className="rounded-md bg-white/[.05] px-1.5 py-0.5 text-[9px] text-zinc-500">
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function SelectField({
+  value,
+  onChange,
+  options,
+  icon,
+  label,
+  display,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  icon?: React.ReactNode;
+  label?: string;
+  display?: Record<string, string>;
+}) {
+  return (
+    <label className="relative block">
+      {label && (
+        <span className="mb-1.5 block text-[9px] font-bold uppercase tracking-[.15em] text-zinc-600">
+          {label}
+        </span>
+      )}
+
+      {icon && (
+        <span className="pointer-events-none absolute left-3 top-[calc(50%+2px)] -translate-y-1/2 text-zinc-600">
+          {icon}
+        </span>
+      )}
+
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={`sh-input h-12 w-full appearance-none rounded-xl pr-9 text-sm text-zinc-300 ${
+          icon ? "pl-10" : "px-3"
+        }`}
+      >
+        {options.map((option) => (
+          <option key={option} value={option} className="bg-[#0b0e13]">
+            {display?.[option] || option}
+          </option>
+        ))}
+      </select>
+
+      <ChevronDown
+        size={14}
+        className="pointer-events-none absolute right-3 top-[calc(50%+2px)] -translate-y-1/2 text-zinc-600"
+      />
+    </label>
+  );
+}
+
+function InputFilter({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[9px] font-bold uppercase tracking-[.15em] text-zinc-600">
+        {label}
+      </span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="sh-input h-12 w-full rounded-xl px-3 text-sm text-zinc-300 placeholder:text-zinc-700"
+      />
+    </label>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  icon,
+  detail,
+  positive,
+}: {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  detail: string;
+  positive?: boolean;
+}) {
+  return (
+    <div className="sh-card rounded-xl p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-medium text-zinc-600">{label}</span>
+        <span className="text-zinc-600">{icon}</span>
+      </div>
+      <div className="mt-3 text-2xl font-semibold tracking-tight text-white">
+        {value.toLocaleString("pt-BR")}
+      </div>
+      <div
+        className={`mt-1 flex items-center gap-1 text-[9px] ${
+          positive ? "text-emerald-400" : "text-zinc-600"
+        }`}
+      >
+        {positive && <ArrowUp size={11} />}
+        {detail}
       </div>
     </div>
-  )
+  );
+}
+
+function LeadRow({
+  lead,
+  onOpen,
+  onWhatsApp,
+}: {
+  lead: Lead;
+  onOpen: () => void;
+  onWhatsApp: () => void;
+}) {
+  return (
+    <article
+      onClick={onOpen}
+      className="sh-hover cursor-pointer px-4 py-4 sm:px-5 md:grid md:grid-cols-[minmax(260px,1.5fr)_170px_150px_110px_110px_42px] md:items-center md:gap-4"
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/[.06] bg-white/[.035]">
+          <Building2 size={16} className="text-zinc-500" />
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="truncate text-sm font-semibold text-zinc-100">
+              {lead.name}
+            </h3>
+            {!lead.website && (
+              <span className="hidden rounded bg-red-400/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-red-300 sm:inline">
+                Sem site
+              </span>
+            )}
+          </div>
+
+          <p className="mt-1 truncate text-[11px] text-zinc-600">
+            {lead.category}
+          </p>
+
+          <div className="mt-2 flex flex-wrap gap-1.5 md:hidden">
+            <span className="rounded bg-white/[.04] px-1.5 py-1 text-[9px] text-zinc-500">
+              ★ {lead.rating}
+            </span>
+            <span className="rounded bg-white/[.04] px-1.5 py-1 text-[9px] text-zinc-500">
+              {lead.reviews} avaliações
+            </span>
+            <span
+              className={`rounded border px-1.5 py-1 text-[9px] ${scoreClass(
+                lead.score
+              )}`}
+            >
+              {lead.score.toFixed(1)} · {scoreLabel(lead.score)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500 md:mt-0">
+        <MapPin size={13} className="shrink-0 text-zinc-700" />
+        <span className="truncate">
+          {lead.city}, {lead.state}
+        </span>
+      </div>
+
+      <div className="mt-3 md:mt-0">
+        {lead.website ? (
+          <span className="flex items-center gap-2 text-[10px] text-zinc-500">
+            <Globe2 size={13} />
+            Site encontrado
+          </span>
+        ) : (
+          <span className="flex items-center gap-2 text-[10px] font-semibold text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            Sem site
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3 hidden md:block">
+        <div className="text-xs font-medium text-zinc-300">
+          ★ {lead.rating}
+        </div>
+        <div className="mt-1 text-[9px] text-zinc-600">
+          {lead.reviews.toLocaleString("pt-BR")} avaliações
+        </div>
+      </div>
+
+      <div className="mt-3 hidden md:block">
+        <span
+          className={`inline-flex rounded-lg border px-2 py-1.5 text-[10px] font-bold ${scoreClass(
+            lead.score
+          )}`}
+        >
+          {lead.score.toFixed(1)}
+        </span>
+      </div>
+
+      <div className="mt-3 flex items-center justify-end gap-1 md:mt-0">
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            onWhatsApp();
+          }}
+          className="rounded-lg p-2 text-zinc-600 hover:bg-emerald-400/10 hover:text-emerald-400"
+          title="Abrir WhatsApp"
+        >
+          <MessageCircle size={15} />
+        </button>
+
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpen();
+          }}
+          className="rounded-lg p-2 text-zinc-600 hover:bg-white/5 hover:text-zinc-200"
+          title="Mais detalhes"
+        >
+          <MoreHorizontal size={16} />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function InfoMini({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-white/[.06] bg-white/[.025] p-3">
+      <div className="text-[9px] uppercase tracking-[.15em] text-zinc-600">
+        {label}
+      </div>
+      <div className="mt-1 text-xs font-semibold text-zinc-300">{value}</div>
+    </div>
+  );
+}
+
+function DetailLine({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex gap-3 border-b border-white/[.05] py-3.5 last:border-0">
+      <div className="mt-0.5 text-zinc-600">{icon}</div>
+      <div className="min-w-0">
+        <div className="text-[9px] font-bold uppercase tracking-[.15em] text-zinc-600">
+          {label}
+        </div>
+        <div className="mt-1 break-words text-xs leading-5 text-zinc-300">
+          {value}
+        </div>
+      </div>
+    </div>
+  );
 }
