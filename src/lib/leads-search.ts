@@ -5,7 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 // também tende a bloquear requisições sem identificação.
 // Troque o e-mail abaixo pelo seu.
 // https://operations.osmfoundation.org/policies/nominatim/
-const APP_USER_AGENT = "LeadHunter/1.0 (contato: seu-email@exemplo.com)";
+const APP_USER_AGENT = "LeadHunter/1.0 (contato: fabioeanieli@gmail,com)";
 
 const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
 const NOMINATIM_ENDPOINT = "https://nominatim.openstreetmap.org/search";
