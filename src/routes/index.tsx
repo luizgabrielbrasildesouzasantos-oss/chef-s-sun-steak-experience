@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowDown,
+  ArrowUp,
   ArrowUpRight,
   BarChart3,
   Bell,
