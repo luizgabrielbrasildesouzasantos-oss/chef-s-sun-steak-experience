@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { searchLeadsServerFn } from "@/lib/leads-search";
 import {
   ArrowDown,
   ArrowUp,
@@ -231,14 +232,33 @@ const categories = [
 
 const states = [
   "Brasil inteiro",
-  "MG",
-  "SP",
-  "GO",
+  "AC",
+  "AL",
+  "AM",
+  "AP",
+  "BA",
+  "CE",
   "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MG",
+  "MS",
+  "MT",
+  "PA",
+  "PB",
+  "PE",
+  "PI",
   "PR",
   "RJ",
-  "SC",
+  "RN",
+  "RO",
+  "RR",
   "RS",
+  "SC",
+  "SE",
+  "SP",
+  "TO",
 ];
 
 function scoreLabel(score: number) {
@@ -255,6 +275,15 @@ function scoreClass(score: number) {
 
 function escapeCsv(value: string) {
   return `"${value.replaceAll('"', '""')}"`;
+}
+
+// O OpenStreetMap não tem nota/avaliações como o Google Maps, então o score
+// aqui é uma heurística baseada só em "tem site" e "tem telefone".
+function computeScore(hasWebsite: boolean, hasPhone: boolean) {
+  let score = 5;
+  if (!hasWebsite) score += 3;
+  if (hasPhone) score += 2;
+  return Math.min(10, score);
 }
 
 export default function LeadHunter() {
@@ -406,12 +435,68 @@ export default function LeadHunter() {
   const runSearch = async () => {
     setSearching(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 650));
+    try {
+      const found = await searchLeadsServerFn({
+        data: { category, state, city },
+      });
 
-    setSearching(false);
-    setToast(
-      "Busca simulada concluída. A interface já está pronta para conectar à API do Google Places."
-    );
+      const mapped: Lead[] = found.map((place) => {
+        const hasWebsite = Boolean(place.website);
+        const hasPhone = Boolean(place.phone);
+        const score = computeScore(hasWebsite, hasPhone);
+        const signals = [
+          hasWebsite ? "Site encontrado" : "Sem site",
+          hasPhone ? "Telefone" : "",
+          "OpenStreetMap",
+        ].filter(Boolean);
+
+        return {
+          id: place.id,
+          name: place.name,
+          category: place.category,
+          city: place.city,
+          state: place.state,
+          address: place.address,
+          rating: 0,
+          reviews: 0,
+          phone: place.phone,
+          website: place.website,
+          mapsUrl: place.mapsUrl,
+          status: "Novo",
+          notes: "",
+          score,
+          signals,
+          lastSeen: place.lastSeen,
+        };
+      });
+
+      setLeads((current) => {
+        const byId = new Map(current.map((lead) => [lead.id, lead]));
+        for (const lead of mapped) {
+          const existing = byId.get(lead.id);
+          // Preserva status/observações de leads já trabalhados anteriormente.
+          byId.set(
+            lead.id,
+            existing ? { ...lead, status: existing.status, notes: existing.notes } : lead
+          );
+        }
+        return Array.from(byId.values());
+      });
+
+      setToast(
+        mapped.length > 0
+          ? `${mapped.length} leads encontrados no Google Places.`
+          : "Nenhum lead encontrado para esses filtros."
+      );
+    } catch (error) {
+      setToast(
+        error instanceof Error
+          ? error.message
+          : "Erro ao buscar leads no Google Places."
+      );
+    } finally {
+      setSearching(false);
+    }
   };
 
   const openWhatsApp = (lead: Lead) => {
@@ -1046,12 +1131,20 @@ export default function LeadHunter() {
 
               <div className="mt-6 grid grid-cols-2 gap-2">
                 <InfoMini
-                  label="Avaliação"
-                  value={`★ ${activeLead.rating}`}
+                  label={activeLead.reviews > 0 ? "Avaliação" : "Fonte"}
+                  value={
+                    activeLead.reviews > 0
+                      ? `★ ${activeLead.rating}`
+                      : "OpenStreetMap"
+                  }
                 />
                 <InfoMini
                   label="Reviews"
-                  value={activeLead.reviews.toLocaleString("pt-BR")}
+                  value={
+                    activeLead.reviews > 0
+                      ? activeLead.reviews.toLocaleString("pt-BR")
+                      : "—"
+                  }
                 />
                 <InfoMini
                   label="Website"
@@ -1366,12 +1459,20 @@ function LeadRow({
           </p>
 
           <div className="mt-2 flex flex-wrap gap-1.5 md:hidden">
-            <span className="rounded bg-white/[.04] px-1.5 py-1 text-[9px] text-zinc-500">
-              ★ {lead.rating}
-            </span>
-            <span className="rounded bg-white/[.04] px-1.5 py-1 text-[9px] text-zinc-500">
-              {lead.reviews} avaliações
-            </span>
+            {lead.reviews > 0 ? (
+              <>
+                <span className="rounded bg-white/[.04] px-1.5 py-1 text-[9px] text-zinc-500">
+                  ★ {lead.rating}
+                </span>
+                <span className="rounded bg-white/[.04] px-1.5 py-1 text-[9px] text-zinc-500">
+                  {lead.reviews} avaliações
+                </span>
+              </>
+            ) : (
+              <span className="rounded bg-white/[.04] px-1.5 py-1 text-[9px] text-zinc-500">
+                OpenStreetMap
+              </span>
+            )}
             <span
               className={`rounded border px-1.5 py-1 text-[9px] ${scoreClass(
                 lead.score
@@ -1405,12 +1506,18 @@ function LeadRow({
       </div>
 
       <div className="mt-3 hidden md:block">
-        <div className="text-xs font-medium text-zinc-300">
-          ★ {lead.rating}
-        </div>
-        <div className="mt-1 text-[9px] text-zinc-600">
-          {lead.reviews.toLocaleString("pt-BR")} avaliações
-        </div>
+        {lead.reviews > 0 ? (
+          <>
+            <div className="text-xs font-medium text-zinc-300">
+              ★ {lead.rating}
+            </div>
+            <div className="mt-1 text-[9px] text-zinc-600">
+              {lead.reviews.toLocaleString("pt-BR")} avaliações
+            </div>
+          </>
+        ) : (
+          <div className="text-[9px] text-zinc-600">OpenStreetMap</div>
+        )}
       </div>
 
       <div className="mt-3 hidden md:block">
