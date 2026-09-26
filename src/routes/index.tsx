@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -256,14 +256,26 @@ function escapeCsv(value: string) {
 }
 
 export default function LeadHunter() {
-  const [leads, setLeads] = useState<Lead[]>(() => {
+  // TanStack Start can render this route on the server.
+  // Do not access localStorage during the initial render.
+  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
+  const [storageReady, setStorageReady] = useState(false);
+
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem("sitehunter-leads");
-      return saved ? JSON.parse(saved) : INITIAL_LEADS;
+      const saved = window.localStorage.getItem("sitehunter-leads");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setLeads(parsed);
+        }
+      }
     } catch {
-      return INITIAL_LEADS;
+      // Keep the demo data when storage is unavailable or invalid.
+    } finally {
+      setStorageReady(true);
     }
-  });
+  }, []);
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos os nichos");
@@ -282,8 +294,13 @@ export default function LeadHunter() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("sitehunter-leads", JSON.stringify(leads));
-  }, [leads]);
+    if (!storageReady) return;
+    try {
+      window.localStorage.setItem("sitehunter-leads", JSON.stringify(leads));
+    } catch {
+      // Storage may be unavailable in private/restricted environments.
+    }
+  }, [leads, storageReady]);
 
   useEffect(() => {
     if (!toast) return;
@@ -1172,7 +1189,7 @@ function SidebarItem({
   badge,
   onClick,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   active?: boolean;
   badge?: string;
@@ -1211,7 +1228,7 @@ function SelectField({
   value: string;
   onChange: (value: string) => void;
   options: string[];
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   label?: string;
   display?: Record<string, string>;
 }) {
@@ -1286,7 +1303,7 @@ function MetricCard({
 }: {
   label: string;
   value: number;
-  icon: React.ReactNode;
+  icon: ReactNode;
   detail: string;
   positive?: boolean;
 }) {
@@ -1453,7 +1470,7 @@ function DetailLine({
   label,
   value,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   value: string;
 }) {
