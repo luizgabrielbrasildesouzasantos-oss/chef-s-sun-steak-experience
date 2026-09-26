@@ -500,15 +500,31 @@ export default function LeadHunter() {
   };
 
   const openWhatsApp = (lead: Lead) => {
-    const digits = lead.phone.replace(/\D/g, "");
-    const message = `Olá, ${lead.name}! Tudo bem? Encontrei o perfil da empresa no Google e queria apresentar uma ideia de site profissional para vocês. Posso te mostrar uma demonstração?`;
-    window.open(
-      `https://wa.me/55${digits}?text=${encodeURIComponent(message)}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-
+    let digits = lead.phone.replace(/\D/g, "").replace(/^0+/, "");
+    if (digits.startsWith("55") && digits.length > 11) digits = digits.slice(2);
+    if (digits.length < 10 || digits.length > 11) {
+      setToast("Esta empresa não tem um telefone válido cadastrado.");
+      return;
+    }
+    const message = `Olá, ${lead.name}! Tudo bem? Encontrei o perfil da empresa e queria apresentar uma ideia de site profissional para vocês. Posso te mostrar uma demonstração?`;
+    const url = `https://api.whatsapp.com/send?phone=55${digits}&text=${encodeURIComponent(message)}`;
+    openExternal(url);
     updateLead(lead.id, { status: "Contatado" });
+  };
+
+  // Abre links externos em nova aba; se o navegador bloquear o pop-up
+  // (comum dentro da pré-visualização), abre na aba principal.
+  const openExternal = (url: string) => {
+    const win = window.open(url, "_blank");
+    if (win) {
+      win.opener = null;
+    } else {
+      try {
+        (window.top ?? window).location.href = url;
+      } catch {
+        window.location.href = url;
+      }
+    }
   };
 
   const exportCsv = () => {
@@ -1194,7 +1210,11 @@ export default function LeadHunter() {
                 <a
                   href={activeLead.mapsUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openExternal(activeLead.mapsUrl);
+                  }}
                   className="flex h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.03] text-xs font-semibold text-zinc-300 hover:bg-white/[.06]"
                 >
                   <ExternalLink size={15} />
