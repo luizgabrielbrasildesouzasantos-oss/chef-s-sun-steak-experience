@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -1488,3 +1489,8 @@ function DetailLine({
     </div>
   );
 }
+
+
+export const Route = createFileRoute("/")({
+  component: LeadHunter,
+});
