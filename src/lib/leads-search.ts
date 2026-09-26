@@ -114,23 +114,42 @@ function buildOverpassQuery(
   return `[out:json][timeout:50];\n(\n  ${statements}\n);\nout center 40;`;
 }
 
+const OVERPASS_MIRRORS = [
+  OVERPASS_ENDPOINT,
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+];
+
+// Tenta cada servidor público do Overpass; se um estiver ocupado (429/504)
+// ou falhar, passa para o próximo. Nunca repassa o HTML bruto do erro.
 async function runOverpassQuery(query: string): Promise<OverpassElement[]> {
-  const response = await fetch(OVERPASS_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain",
-      "User-Agent": APP_USER_AGENT,
-    },
-    body: query,
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Overpass API error (${response.status}): ${body}`);
+  let lastStatus = 0;
+  for (const endpoint of OVERPASS_MIRRORS) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": APP_USER_AGENT,
+        },
+        body: `data=${encodeURIComponent(query)}`,
+        signal: AbortSignal.timeout(55000),
+      });
+      if (!response.ok) {
+        lastStatus = response.status;
+        continue;
+      }
+      const data = (await response.json()) as { elements?: OverpassElement[] };
+      return data.elements ?? [];
+    } catch {
+      continue;
+    }
   }
-
-  const data = (await response.json()) as { elements?: OverpassElement[] };
-  return data.elements ?? [];
+  throw new Error(
+    lastStatus === 429 || lastStatus === 504
+      ? "Os servidores gratuitos do OpenStreetMap estão sobrecarregados agora. Tente novamente em alguns minutos ou busque por uma cidade específica."
+      : "Não foi possível consultar o OpenStreetMap agora. Tente novamente em instantes."
+  );
 }
 
 // Normaliza telefones para evitar duplicar o "55" na hora de abrir o WhatsApp
