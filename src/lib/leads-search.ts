@@ -185,7 +185,7 @@ function elementToLead(
 
   const mapsUrl =
     lat != null && lon != null
-      ? `https://www.google.com/maps?q=${lat},${lon}`
+      ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
           `${name} ${fallback.city}`
         )}`;
